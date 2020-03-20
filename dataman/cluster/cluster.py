@@ -32,7 +32,7 @@ def load_yaml(yaml_path):
 
 
 def run_kk(params, run_kk=True):
-    cfg, target_path = params
+    cfg,maxc, target_path = params
     tt_fname = target_path.name
     tetrode_file_stem = tt_fname.split(".")[0]
     tetrode_file_elecno = tt_fname.split(".")[-1]
@@ -53,7 +53,7 @@ def run_kk(params, run_kk=True):
 
     # Combine executable and arguments
     kk_executable = cfg["kk_executable"]
-    kk_cmd = f'{kk_executable} {tetrode_file_stem} -ElecNo {tetrode_file_elecno} -UseFeatures {validity_string}'
+    kk_cmd = f'{kk_executable} {tetrode_file_stem} -ElecNo {tetrode_file_elecno} -UseFeatures {validity_string} -MaxPossibleClusters {maxc}'
     if cfg['KKv3']:
         kk_cmd += ' -UseDistributional 0'
     kk_cmd_list = kk_cmd.split(' ')
@@ -157,6 +157,7 @@ def main(args):
     parser.add_argument('target', help='Target path, either path containing tetrode files, or single tetrodeXX.mat')
     parser.add_argument('--KK', help='Path to KlustaKwik executable')
     parser.add_argument('--features', nargs='*', help='list of features to use for clustering')
+    parser.add_argument('--maxcluster', help='maximum number of cluster', default=35)
     parser.add_argument('--config', help='Path to configuration file')
     parser.add_argument('--skip', help='Skip if clu file exists already', action='store_true')
     parser.add_argument('--no_spread', help='Shade report plots without static spread', action='store_true')
@@ -218,10 +219,11 @@ def main(args):
     from multiprocessing.pool import ThreadPool
     num_procs = cli_args.num_proc if cli_args.num_proc > 0 else len(tetrode_files)
     pool = ThreadPool(processes=num_procs)
-
+    maxc=cli_args.maxcluster
     # for tfp in tetrode_files:
-    params = [(cfg, tfp) for tfp in tetrode_files]
+    params = [(cfg,maxc, tfp) for tfp in tetrode_files]
     print(len(params))
+
 
     results = pool.map_async(run_kk, params)
 
